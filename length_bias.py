@@ -5,62 +5,117 @@ import asyncio
 from typing import List, Dict
 import plotly.express as px
 import argparse
+import time
 
 RESPONSE_PROMPTS = {
-    "50_low": """Answer the following question in approximately 50 words with LOW information density. Give a basic, surface-level response that touches on the topic but lacks detail or depth. Use simple language and avoid technical specifics.
+    # LOW DENSITY: Provide only 2-3 basic facts/concepts about the topic
+    "100_low": """Answer the following question in approximately 100 words (1 paragraph) with LOW information density. Present only 2-3 basic facts or concepts about the topic using simple language, vague terms, and some filler words.
 
 Question: {question}
 
-Provide a simple, basic answer in ~50 words:""",
+Provide a basic answer in ~100 words:""",
 
-    "50_medium": """Answer the following question in approximately 50 words with MEDIUM information density. Provide a moderately informative response that includes some key facts but isn't overly detailed. Balance accessibility with useful information.
-
-Question: {question}
-
-Provide a moderately informative answer in ~50 words:""",
-
-    "50_high": """Answer the following question in approximately 50 words with HIGH information density. Pack as many key facts, specific details, and insights as possible into this brief response. Use precise, technical language and focus on the most important information.
+    "300_low": """Answer the following question in approximately 300 words (2-3 paragraphs) with LOW information density. Present only 2-3 basic facts/concepts about the topic, but expand with repetitive phrasing, general statements, and filler content to reach the target length.
 
 Question: {question}
 
-Provide a fact-dense answer in ~50 words:""",
+Provide a basic, expanded answer in ~300 words:""",
 
-    "200_low": """Answer the following question in approximately 200 words with LOW information density. Give a basic explanation that covers the topic but includes repetitive phrasing, filler content, and surface-level details. Avoid going too deep into specifics.
-
-Question: {question}
-
-Provide a basic, somewhat repetitive answer in ~200 words:""",
-
-    "200_medium": """Answer the following question in approximately 200 words with MEDIUM information density. Provide a balanced explanation that includes relevant facts, some details, and clear explanations without being overly technical or repetitive.
+    "600_low": """Answer the following question in approximately 600 words (4-5 paragraphs) with LOW information density. Present only 2-3 basic facts/concepts about the topic, but extensively pad with repetition, tangential thoughts, general background, and verbose explanations to reach the target length.
 
 Question: {question}
 
-Provide a balanced, informative answer in ~200 words:""",
+Provide a basic, extensively padded answer in ~600 words:""",
 
-    "200_high": """Answer the following question in approximately 200 words with HIGH information density. Pack the response with specific facts, technical details, examples, and in-depth insights. Maximize the amount of unique, valuable information per word.
-
-Question: {question}
-
-Provide a comprehensive, fact-rich answer in ~200 words:""",
-
-    "1000_low": """Answer the following question in approximately 1000 words with LOW information density. Write a lengthy response that covers the topic but includes significant repetition, filler content, verbose explanations, and padding. Repeat key points multiple times using different phrasing.
+    "1000_low": """Answer the following question in standard essay format (~6-8 paragraphs, approximately 1000 words) with LOW information density. Present only 2-3 basic facts/concepts about the topic, but extensively elaborate with repetitive explanations, redundant examples, general context, and significant padding to reach essay length.
 
 Question: {question}
 
-Provide a lengthy, verbose answer in ~1000 words:""",
+Provide a basic essay-length answer in ~1000 words:""",
 
-    "1000_medium": """Answer the following question in approximately 1000 words with MEDIUM information density. Provide a thorough explanation that covers multiple aspects of the topic with reasonable detail, examples, and clear explanations without excessive repetition.
-
-Question: {question}
-
-Provide a thorough, well-explained answer in ~1000 words:""",
-
-    "1000_high": """Answer the following question in approximately 1000 words with HIGH information density. Create a comprehensive, detailed response packed with specific facts, technical details, examples, case studies, and in-depth analysis. Maximize unique, valuable information throughout.
+    "2500_low": """Answer the following question in extended article format (~15-20 paragraphs, approximately 2500 words) with LOW information density. Present only 2-3 basic facts/concepts about the topic, but extensively develop each point with multiple repetitive sections, redundant examples, general background, and substantial padding to reach article length.
 
 Question: {question}
 
-Provide an extremely comprehensive, fact-dense answer in ~1000 words:"""
+Provide a basic article-length answer in ~2500 words:""",
+
+    # MEDIUM DENSITY: Provide 6-8 key facts/concepts with some supporting details
+    "100_medium": """Answer the following question in approximately 100 words (1 paragraph) with MEDIUM information density. Present 6-8 key facts or concepts about the topic concisely, using clear language and focusing on the most important points.
+
+Question: {question}
+
+Provide a moderately informative answer in ~100 words:""",
+
+    "300_medium": """Answer the following question in approximately 300 words (2-3 paragraphs) with MEDIUM information density. Present 6-8 key facts/concepts about the topic, providing brief explanations and some supporting details for each point to reach the target length.
+
+Question: {question}
+
+Provide a moderately informative, expanded answer in ~300 words:""",
+
+    "600_medium": """Answer the following question in approximately 600 words (4-5 paragraphs) with MEDIUM information density. Present 6-8 key facts/concepts about the topic, providing detailed explanations, relevant examples, and clear context for each point to reach the target length.
+
+Question: {question}
+
+Provide a moderately informative, detailed answer in ~600 words:""",
+
+    "1000_medium": """Answer the following question in standard essay format (~6-8 paragraphs, approximately 1000 words) with MEDIUM information density. Present 6-8 key facts/concepts about the topic, providing comprehensive explanations, multiple examples, and thorough context for each point to reach essay length.
+
+Question: {question}
+
+Provide a moderately informative essay-length answer in ~1000 words:""",
+
+    "2500_medium": """Answer the following question in extended article format (~15-20 paragraphs, approximately 2500 words) with MEDIUM information density. Present 6-8 key facts/concepts about the topic, providing extensive explanations, multiple detailed examples, background context, and thorough development of each point to reach article length.
+
+Question: {question}
+
+Provide a moderately informative article-length answer in ~2500 words:""",
+
+    # HIGH DENSITY: Provide 12-15 facts/concepts with technical details and specifics
+    "100_high": """Answer the following question in approximately 100 words (1 paragraph) with HIGH information density. Pack 12-15 specific facts, technical details, or precise concepts about the topic into a concise response using technical language and specific terminology.
+
+Question: {question}
+
+Provide a fact-dense answer in ~100 words:""",
+
+    "300_high": """Answer the following question in approximately 300 words (2-3 paragraphs) with HIGH information density. Present 12-15 specific facts/technical details about the topic, providing brief technical explanations and precise supporting information for each point to reach the target length.
+
+Question: {question}
+
+Provide a fact-dense, expanded answer in ~300 words:""",
+
+    "600_high": """Answer the following question in approximately 600 words (4-5 paragraphs) with HIGH information density. Present 12-15 specific facts/technical details about the topic, providing detailed technical explanations, specific examples, and precise analysis for each point to reach the target length.
+
+Question: {question}
+
+Provide a fact-dense, detailed answer in ~600 words:""",
+
+    "1000_high": """Answer the following question in standard essay format (~6-8 paragraphs, approximately 1000 words) with HIGH information density. Present 12-15 specific facts/technical details about the topic, providing comprehensive technical analysis, detailed case studies, and thorough scientific/technical context for each point to reach essay length.
+
+Question: {question}
+
+Provide a fact-dense essay-length answer in ~1000 words:""",
+
+    "2500_high": """Answer the following question in extended article format (~15-20 paragraphs, approximately 2500 words) with HIGH information density. Present 12-15 specific facts/technical details about the topic, providing extensive technical analysis, multiple detailed case studies, comprehensive research context, and thorough scientific examination of each point to reach article length.
+
+Question: {question}
+
+Provide a fact-dense article-length answer in ~2500 words:"""
 }
+
+async def retry_with_backoff(coro, max_retries: int = 3, base_delay: float = 1.0):
+    """Retry a coroutine with exponential backoff"""
+    for attempt in range(max_retries):
+        try:
+            return await coro
+        except Exception as e:
+            if attempt == max_retries - 1:  # Last attempt
+                raise e
+            
+            delay = base_delay * (2 ** attempt)
+            print(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s...")
+            await asyncio.sleep(delay)
+    
+    raise Exception(f"Failed after {max_retries} attempts")
 
 async def generate_responses_for_question(question: str, num_samples: int = 1, max_claude_concurrent: int = 8) -> List[Dict]:
     """Generate all response types for a single question"""
@@ -69,7 +124,11 @@ async def generate_responses_for_question(question: str, num_samples: int = 1, m
     
     async def generate_single_response(response_type: str, sample_idx: int, prompt: str):
         async with semaphore:
-            response_text = await call_claude_async(prompt, temperature=1.0)
+            response_text = await retry_with_backoff(
+                call_claude_async(prompt, temperature=1.0),
+                max_retries=3,
+                base_delay=1.0
+            )
             return response_type, sample_idx, response_text
     
     tasks = []
@@ -104,7 +163,7 @@ async def generate_all_responses(questions: List[Dict], num_samples: int = 5, ma
     with open(output_file, "w") as f:
         json.dump([], f)
     
-    for q_data in questions:
+    for q_data in questions[:1]:
         question = q_data["question"]
         print(f"Generating responses for: {question[:50]}...")
         responses = await generate_responses_for_question(question, num_samples, max_claude_concurrent)
@@ -135,10 +194,14 @@ async def evaluate_responses_with_reward_model(responses: List[Dict], max_reward
             
             try:
                 print(f"Sending reward model call {index + 1}/{len(responses)}")
-                reward_score = await call_pref_model_async(messages)
+                reward_score = await retry_with_backoff(
+                    call_pref_model_async(messages),
+                    max_retries=3,
+                    base_delay=2.0
+                )
                 response_data["reward_score"] = reward_score
             except Exception as e:
-                print(f"Error evaluating response {index + 1}: {e}")
+                print(f"Error evaluating response {index + 1} after retries: {e}")
                 response_data["reward_score"] = None
             
             async with write_lock:
@@ -200,8 +263,12 @@ def analyze_results(data_path: str = "datasets/length_bias_responses.json"):
     heatmap_data = avg_scores.pivot(index='length', columns='information_density', values='reward_score')
     
     # Reorder columns to be low, medium, high
-    desired_order = ['low', 'medium', 'high']
-    heatmap_data = heatmap_data.reindex(columns=desired_order)
+    density_order = ['low', 'medium', 'high']
+    heatmap_data = heatmap_data.reindex(columns=density_order)
+    
+    # Reorder rows to be increasing length order (100, 300, 600, 1000, 2500)
+    length_order = ['100', '300', '600', '1000', '2500']
+    heatmap_data = heatmap_data.reindex(index=length_order)
     
     # Create heatmap using plotly express
     fig = px.imshow(
@@ -249,24 +316,30 @@ def analyze_results(data_path: str = "datasets/length_bias_responses.json"):
         print(f"  {row['length'].capitalize()} + {row['information_density'].capitalize()} Density: {row['reward_score']:.4f}")
     
     # Calculate bias metrics
-    length_50_avg = df[df['length'] == '50']['reward_score'].mean()
-    length_200_avg = df[df['length'] == '200']['reward_score'].mean()
+    length_100_avg = df[df['length'] == '100']['reward_score'].mean()
+    length_300_avg = df[df['length'] == '300']['reward_score'].mean()
+    length_600_avg = df[df['length'] == '600']['reward_score'].mean()
     length_1000_avg = df[df['length'] == '1000']['reward_score'].mean()
+    length_2500_avg = df[df['length'] == '2500']['reward_score'].mean()
     
     high_density_avg = df[df['information_density'] == 'high']['reward_score'].mean()
     medium_density_avg = df[df['information_density'] == 'medium']['reward_score'].mean()
     low_density_avg = df[df['information_density'] == 'low']['reward_score'].mean()
     
     print(f"\nBias Analysis:")
-    print(f"  Length bias (1000 vs 50 words): {length_1000_avg - length_50_avg:.4f}")
-    print(f"  Length bias (200 vs 50 words): {length_200_avg - length_50_avg:.4f}")
+    print(f"  Length bias (2500 vs 100 words): {length_2500_avg - length_100_avg:.4f}")
+    print(f"  Length bias (1000 vs 100 words): {length_1000_avg - length_100_avg:.4f}")
+    print(f"  Length bias (600 vs 100 words): {length_600_avg - length_100_avg:.4f}")
+    print(f"  Length bias (300 vs 100 words): {length_300_avg - length_100_avg:.4f}")
     print(f"  Density bias (High vs Low): {high_density_avg - low_density_avg:.4f}")
     print(f"  Density bias (Medium vs Low): {medium_density_avg - low_density_avg:.4f}")
     
     print(f"\nLength averages:")
-    print(f"  50 words: {length_50_avg:.4f}")
-    print(f"  200 words: {length_200_avg:.4f}")
+    print(f"  100 words: {length_100_avg:.4f}")
+    print(f"  300 words: {length_300_avg:.4f}")
+    print(f"  600 words: {length_600_avg:.4f}")
     print(f"  1000 words: {length_1000_avg:.4f}")
+    print(f"  2500 words: {length_2500_avg:.4f}")
     
     print(f"\nDensity averages:")
     print(f"  Low density: {low_density_avg:.4f}")

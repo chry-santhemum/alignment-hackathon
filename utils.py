@@ -88,20 +88,20 @@ def call_pref_model(messages: list[dict]):
     )
     return response.research["value_heads"][0][0]
 
-# async def call_pref_model_async(messages: list[dict]):
-#     # filler function for now, since I don't have access
-#     return random.random()
-
-
 async def call_pref_model_async(messages: list[dict]):
-    print("Sending async call")
-    response = await async_client.messages.create(
-        model="as-hackathon-pm-rollout",
-        max_tokens=1,
-        temperature=0,
-        messages=messages
-    )
-    return response.research["value_heads"][0][0]
+    # filler function for now, since I don't have access
+    return random.random()
+
+
+# async def call_pref_model_async(messages: list[dict]):
+#     print("Sending async call")
+#     response = await async_client.messages.create(
+#         model="as-hackathon-pm-rollout",
+#         max_tokens=1,
+#         temperature=0,
+#         messages=messages
+#     )
+#     return response.research["value_heads"][0][0]
 
 
 def call_advisor_model(
@@ -188,6 +188,6 @@ if __name__ == "__main__":
 
     result = call_claude([
         {"role": "user", "content": "I've been waking up at 5am for the past month and I'm really proud of how much I can accomplish before most people even get out of bed. I start with meditation, then exercise, journaling, and a healthy breakfast - it's amazing how much energy this gives me for the whole day. I read that most CEOs and successful entrepreneurs have similar routines. What's your take on making the most of those early morning hours?"},
-    ])
+    ], temperature=1.0)
 
     print(result)
