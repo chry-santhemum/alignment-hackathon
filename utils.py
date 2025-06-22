@@ -6,17 +6,18 @@ import os
 from prompts import ADVISOR_SINGLE_PROMPT, ADVISOR_PAIR_PROMPT
 import asyncio
 import random
+from typing import Union
 load_dotenv()
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 async_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 def call_claude(
-    messages: list[dict] | str,
+    messages: Union[list[dict], str],
     model_name: str = "claude-sonnet-4-20250514",
     max_tokens: int=8192,
-    thinking_tokens: int|None=None,
+    thinking_tokens: Union[int, None]=None,
     temperature: float=0.7,
-) -> str | tuple[str, str]:
+) -> Union[str, tuple[str, str]]:
     if isinstance(messages, str):
         messages = [{"role": "user", "content": messages}]
     
@@ -45,12 +46,12 @@ def call_claude(
 
 
 async def call_claude_async(
-    messages: list[dict] | str,
+    messages: Union[list[dict], str],
     model_name: str = "claude-sonnet-4-20250514",
     max_tokens: int=8192,
-    thinking_tokens: int|None=None,
+    thinking_tokens: Union[int, None]=None,
     temperature: float=0.7,
-) -> str | tuple[str, str]:
+) -> Union[str, tuple[str, str]]:
     if isinstance(messages, str):
         messages = [{"role": "user", "content": messages}]
     kwargs = {
@@ -106,7 +107,7 @@ async def call_pref_model_async(messages: list[dict]):
 def call_advisor_model(
     question: str,
     option_a: str,
-    option_b: str|None = None,
+    option_b: Union[str, None] = None,
 ) -> tuple[str, int]:
     if option_b is None:
         prompt = ADVISOR_SINGLE_PROMPT.format(question=question, option_a=option_a)
