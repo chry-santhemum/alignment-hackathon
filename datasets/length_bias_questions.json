@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "question": "How does photosynthesis work?"
+  },
+  {
+    "id": 2,
+    "question": "What causes inflation in an economy?"
+  },
+  {
+    "id": 3,
+    "question": "How do neural networks learn?"
+  },
+  {
+    "id": 4,
+    "question": "What are the main causes of climate change?"
+  },
+  {
+    "id": 5,
+    "question": "How does the immune system fight infections?"
+  },
+  {
+    "id": 6,
+    "question": "What is quantum entanglement?"
+  },
+  {
+    "id": 7,
+    "question": "How do vaccines work?"
+  },
+  {
+    "id": 8,
+    "question": "What causes earthquakes?"
+  },
+  {
+    "id": 9,
+    "question": "How does DNA replication occur?"
+  },
+  {
+    "id": 10,
+    "question": "What is the greenhouse effect?"
+  },
+  {
+    "id": 11,
+    "question": "How do antibiotics kill bacteria?"
+  },
+  {
+    "id": 12,
+    "question": "What is machine learning?"
+  },
+  {
+    "id": 13,
+    "question": "How does the brain process memories?"
+  },
+  {
+    "id": 14,
+    "question": "What causes ocean currents?"
+  },
+  {
+    "id": 15,
+    "question": "How do solar panels generate electricity?"
+  },
+  {
+    "id": 16,
+    "question": "What is genetic engineering?"
+  },
+  {
+    "id": 17,
+    "question": "How does compound interest work?"
+  },
+  {
+    "id": 18,
+    "question": "What causes muscle growth?"
+  },
+  {
+    "id": 19,
+    "question": "How do black holes form?"
+  },
+  {
+    "id": 20,
+    "question": "What is CRISPR gene editing?"
+  }
+]

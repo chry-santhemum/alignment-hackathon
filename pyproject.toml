@@ -1,0 +1,14 @@
+[project]
+name = "anthro"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.54.0",
+    "dotenv>=0.9.9",
+    "kaleido>=1.0.0",
+    "numpy>=2.3.1",
+    "pandas>=2.3.0",
+    "plotly>=6.1.2",
+]
