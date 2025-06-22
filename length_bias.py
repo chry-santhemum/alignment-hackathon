@@ -96,46 +96,74 @@ async def generate_responses_for_question(question: str, num_samples: int = 1, m
     
     return responses
 
-async def generate_all_responses(questions: List[Dict], num_samples: int = 5, max_claude_concurrent: int = 8) -> List[Dict]:
+async def generate_all_responses(questions: List[Dict], num_samples: int = 5, max_claude_concurrent: int = 8, output_file: str = "datasets/length_bias_responses.json") -> List[Dict]:
     """Generate responses for all questions"""
     all_responses = []
+    
+    # Initialize empty file
+    with open(output_file, "w") as f:
+        json.dump([], f)
     
     for q_data in questions:
         question = q_data["question"]
         print(f"Generating responses for: {question[:50]}...")
         responses = await generate_responses_for_question(question, num_samples, max_claude_concurrent)
         all_responses.extend(responses)
+        
+        # Write responses incrementally
+        with open(output_file, "w") as f:
+            json.dump(all_responses, f, indent=2)
+        print(f"Saved {len(all_responses)} responses so far...")
     
     return all_responses
 
-async def evaluate_responses_with_reward_model(responses: List[Dict], max_reward_concurrent: int = 4) -> List[Dict]:
+async def evaluate_responses_with_reward_model(responses: List[Dict], max_reward_concurrent: int = 4, output_file: str = "datasets/length_bias_responses.json") -> List[Dict]:
     """Evaluate responses using the reward model"""
     semaphore = asyncio.Semaphore(max_reward_concurrent)
+    completed_count = 0
+    evaluated_responses = [resp.copy() for resp in responses]  # Working copy
+    write_lock = asyncio.Lock()  # Prevent concurrent file writes
     
-    async def evaluate_single_response(response_data: Dict):
+    async def evaluate_single_response(index: int):
+        nonlocal completed_count
         async with semaphore:
+            response_data = evaluated_responses[index]
             messages = [
                 {"role": "user", "content": response_data["question"]},
                 {"role": "assistant", "content": response_data["response"]}
             ]
             
             try:
-                print("Sending out reward model call")
+                print(f"Sending reward model call {index + 1}/{len(responses)}")
                 reward_score = await call_pref_model_async(messages)
                 response_data["reward_score"] = reward_score
-                return response_data
             except Exception as e:
-                print(f"Error evaluating response: {e}")
+                print(f"Error evaluating response {index + 1}: {e}")
                 response_data["reward_score"] = None
-                return response_data
+            
+            async with write_lock:
+                completed_count += 1
+                
+                # Write incrementally every 10 completed evaluations or on last one
+                if completed_count % 10 == 0 or completed_count == len(responses):
+                    try:
+                        with open(output_file, "w") as f:
+                            json.dump(evaluated_responses, f, indent=2)
+                        print(f"Saved progress: {completed_count}/{len(responses)} evaluations completed")
+                    except Exception as e:
+                        print(f"Error saving progress: {e}")
+            
+            return response_data
     
-    tasks = [evaluate_single_response(response_data.copy()) for response_data in responses]
-    evaluated_responses = await asyncio.gather(*tasks)
+    tasks = [evaluate_single_response(i) for i in range(len(responses))]
+    await asyncio.gather(*tasks)
     
     return evaluated_responses
 
 async def run_length_bias_experiment(num_samples: int = 5, max_claude_concurrent: int = 8, max_reward_concurrent: int = 4):
     """Run the complete length bias experiment"""
+    output_file = "datasets/length_bias_responses.json"
+    
     # Load questions
     with open("datasets/length_bias_questions.json", "r") as f:
         questions = json.load(f)
@@ -143,22 +171,14 @@ async def run_length_bias_experiment(num_samples: int = 5, max_claude_concurrent
     print(f"Loaded {len(questions)} questions")
     print(f"Configuration: {num_samples} samples per type, max {max_claude_concurrent} Claude calls, max {max_reward_concurrent} reward calls")
     
-    # Generate responses
+    # Generate responses (saves incrementally)
     print("Generating responses...")
-    responses = await generate_all_responses(questions, num_samples, max_claude_concurrent)
-    
-    # Save intermediate results
-    with open("datasets/length_bias_responses.json", "w") as f:
-        json.dump(responses, f, indent=2)
+    responses = await generate_all_responses(questions, num_samples, max_claude_concurrent, output_file)
     
     print(f"Generated {len(responses)} responses, evaluating with reward model...")
     
-    # Evaluate with reward model
-    evaluated_responses = await evaluate_responses_with_reward_model(responses, max_reward_concurrent)
-    
-    # Save final dataset
-    with open("datasets/length_bias_responses.json", "w") as f:
-        json.dump(evaluated_responses, f, indent=2)
+    # Evaluate with reward model (saves incrementally)
+    evaluated_responses = await evaluate_responses_with_reward_model(responses, max_reward_concurrent, output_file)
     
     print("Experiment complete! Results saved to datasets/length_bias_responses.json")
     return evaluated_responses
