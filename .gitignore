@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
-# logs
+# stuff
 logs/
 .env
+datasets/length_bias_responses.json
+length_bias_analysis.png

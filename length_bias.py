@@ -163,7 +163,7 @@ async def generate_all_responses(questions: List[Dict], num_samples: int = 5, ma
     with open(output_file, "w") as f:
         json.dump([], f)
     
-    for q_data in questions[:1]:
+    for q_data in questions:
         question = q_data["question"]
         print(f"Generating responses for: {question[:50]}...")
         responses = await generate_responses_for_question(question, num_samples, max_claude_concurrent)
@@ -350,8 +350,8 @@ def analyze_results(data_path: str = "datasets/length_bias_responses.json"):
 
 def main():
     parser = argparse.ArgumentParser(description="Run length bias experiment on reward models")
-    parser.add_argument("--num-samples", type=int, default=3, 
-                       help="Number of samples for each response type per question (default: 3)")
+    parser.add_argument("--num-samples", type=int, default=1, 
+                       help="Number of samples for each response type per question (default: 1)")
     parser.add_argument("--max-claude-concurrent", type=int, default=8,
                        help="Maximum concurrent calls to Claude model (default: 8)")
     parser.add_argument("--max-reward-concurrent", type=int, default=4,
