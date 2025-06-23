@@ -13,4 +13,5 @@ wheels/
 logs/
 .env
 datasets/length_bias_responses.json
+datasets/syco_simple_claude_evaluated.json
 length_bias_analysis.png
