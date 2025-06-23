@@ -96,20 +96,20 @@ def call_pref_model(messages: list[dict]):
     )
     return response.research["value_heads"][0][0]
 
-async def call_pref_model_async(messages: list[dict]):
-    # filler function for now, since I don't have access
-    return random.random()
-
-
 # async def call_pref_model_async(messages: list[dict]):
-#     print("Sending async call")
-#     response = await async_client.messages.create(
-#         model="as-hackathon-pm-rollout",
-#         max_tokens=1,
-#         temperature=0,
-#         messages=messages
-#     )
-#     return response.research["value_heads"][0][0]
+#     # filler function for now, since I don't have access
+#     return random.random()
+
+
+async def call_pref_model_async(messages: list[dict]):
+    print("Sending async call")
+    response = await async_client.messages.create(
+        model="as-hackathon-pm-rollout",
+        max_tokens=1,
+        temperature=0,
+        messages=messages
+    )
+    return response.research["value_heads"][0][0]
 
 
 def call_advisor_model(
