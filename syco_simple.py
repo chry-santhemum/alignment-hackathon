@@ -489,14 +489,7 @@ if __name__ == "__main__":
             eval_samples_per_level = 1  # Default samples to evaluate per sycophancy level
         
         results = asyncio.run(evaluate_and_save_results(max_concurrent=max_concurrent, eval_samples_per_level=eval_samples_per_level, dataset_id=dataset_id))
-    
-    elif len(sys.argv) > 1 and sys.argv[1] == "analyze":
-        # Analyze results mode
-        if len(sys.argv) > 2:
-            dataset_id = int(sys.argv[2])
-        else:
-            dataset_id = 5
-        
+
         analysis = analyze_sycophancy_bias(dataset_id=dataset_id)
     
     else:
